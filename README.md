@@ -1,8 +1,40 @@
 # Norikra::Listener::SetOperation
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/norikra/listener/set_operation`. To experiment with that code, run `bin/console` for an interactive prompt.
+This Norikra listener plugin execute set operation between `new events` and `old events`.
 
-TODO: Delete this and the text above, and describe your gem
+`new events` are events in current window, and `old events` are in previous window.
+
+## Example
+
+Events in current window is below.
+
+```javascript
+{"hostname": "host1"}
+{"hostname": "host2"}
+{"hostname": "host3"}
+{"hostname": "host4"}
+```
+
+Events in previous window is below.
+
+```javascript
+{"hostname": "host3"}
+{"hostname": "host4"}
+{"hostname": "host5"}
+{"hostname": "host6"}
+{"hostname": "host7"}
+```
+
+If you register `SET_OPERATION(hostname,diff_hostname)` to `query_group`, `diff_hostname` event is created like below.
+
+```javascript
+{
+  "difference_new_old": [1,2],
+  "difference_old_new": [5,6,7],
+  "union": [1,2,3,4,5,6,7],
+  "intersection": [3,4]
+}
+```
 
 ## Installation
 
@@ -22,13 +54,7 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
-
-## Development
-
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release` to create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+TODO: Write later.
 
 ## Contributing
 

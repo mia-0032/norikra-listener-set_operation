@@ -4,20 +4,39 @@ require "norikra/listener"
 
 module Norikra
   module Listener
-    class DifferenceNewFromOld < Norikra::Listener::Base
+    class SetOperation < Norikra::Listener::Base
+      attr_writer :engine
+
       def self.label
-        "DifferenceNewFromOld"
+        "SET_OPERATION"
       end
 
       def initialize(argument, query_name, query_group)
         super
-        @stdout = STDOUT
+        conf = Norikra::Listener.parse query_group
+        @field_name, @new_target = conf[:argument].split(',')
+        if @field_name.nil? || @field_name.empty?
+          raise Norikra::ClientError, "#{self.label} field name not specified"
+        end
+        if @new_target.nil? || @new_target.empty?
+          raise Norikra::ClientError, "#{self.label} target name not specified"
+        end
+      end
+
+      def extract_specify_field(events)
+        events.map {|e| e[@field_name] }
       end
 
       def process_sync(news, olds)
-        news.each do |event|
-          @stdout.puts "#{@query_name}\t#{@argument}\t" + JSON.dump(event)
-        end
+        new_items = extract_specify_field news
+        old_items = extract_specify_field olds
+
+        result = {}
+        result["difference_new_old"] = new_items - old_items
+        result["difference_old_new"] = old_items - new_items
+        result["union"] = new_items | old_items
+        result["intersection"] = new_items & old_items
+        @engine.send(@new_target,[result])
       end
     end
   end
