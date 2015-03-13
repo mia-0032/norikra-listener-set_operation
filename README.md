@@ -29,10 +29,10 @@ If you register `SET_OPERATION(hostname,diff_hostname)` to `query_group`, `diff_
 
 ```javascript
 {
-  "difference_new_old": [1,2],
-  "difference_old_new": [5,6,7],
-  "union": [1,2,3,4,5,6,7],
-  "intersection": [3,4]
+  "difference_new_old": ["host1", "host2"],
+  "difference_old_new": ["host5", "host6", "host7"],
+  "union": ["host1", "host2", "host3", "host4", "host5", "host6", "host7"],
+  "intersection": ["host3", "host4"]
 }
 ```
 
