@@ -12,10 +12,10 @@ describe Norikra::Listener::SetOperation do
   end
 
   describe '#process_sync' do
-    listener = Norikra::Listener::SetOperation.new('target1', 'name', 'DIFF_NEW_OLD(n1,new_target)')
-    listener.engine = dummy_engine = Norikra::ListenerSpecHelper::DummyEngine.new
-
     it 'sends events into engine with target name' do
+      listener = Norikra::Listener::SetOperation.new('target1', 'name', 'SET_OPERATION(n1,new_target)')
+      listener.engine = dummy_engine = Norikra::ListenerSpecHelper::DummyEngine.new
+
       listener.process_sync([
           {"n1" => 1, "s" => "one"},
           {"n1" => 2, "s" => "two"},
@@ -30,27 +30,55 @@ describe Norikra::Listener::SetOperation do
           {"n1" => 7, "s" => "seven"}
       ])
 
-      expect_result = {
-          "difference_new_old" => [1,2],
-          "difference_old_new" => [5,6,7],
-          "union" => [1,2,3,4,5,6,7],
-          "intersection" => [3,4]
-      }
+      expect_result = [
+          {"item" => 1, "operation" => "difference_new_old"},
+          {"item" => 2, "operation" => "difference_new_old"},
+          {"item" => 5, "operation" => "difference_old_new"},
+          {"item" => 6, "operation" => "difference_old_new"},
+          {"item" => 7, "operation" => "difference_old_new"},
+          {"item" => 1, "operation" => "union"},
+          {"item" => 2, "operation" => "union"},
+          {"item" => 3, "operation" => "union"},
+          {"item" => 4, "operation" => "union"},
+          {"item" => 5, "operation" => "union"},
+          {"item" => 6, "operation" => "union"},
+          {"item" => 7, "operation" => "union"},
+          {"item" => 3, "operation" => "intersection"},
+          {"item" => 4, "operation" => "intersection"}
+      ]
 
-      expect(dummy_engine.events['new_target'].size).to eql(1)
-      expect(dummy_engine.events['new_target'][0]).to eql(expect_result)
+      expect(dummy_engine.events['new_target'].size).to eql(14)
+      expect(dummy_engine.events['new_target']).to match_array(expect_result)
+    end
+
+    it 'sends only new events into engine with target name' do
+      listener = Norikra::Listener::SetOperation.new('target1', 'name', 'SET_OPERATION(n1,new_target)')
+      listener.engine = dummy_engine = Norikra::ListenerSpecHelper::DummyEngine.new
 
       listener.process_sync([{"n1" => 8, "s" => "eight"}], [])
 
-      expect_result = {
-          "difference_new_old" => [8],
-          "difference_old_new" => [],
-          "union" => [8],
-          "intersection" => []
-      }
+      expect_result = [
+          {"item" => 8, "operation" => "difference_new_old"},
+          {"item" => 8, "operation" => "union"}
+      ]
 
       expect(dummy_engine.events['new_target'].size).to eql(2)
-      expect(dummy_engine.events['new_target'][1]).to eql(expect_result)
+      expect(dummy_engine.events['new_target']).to match_array(expect_result)
+    end
+
+    it 'sends only old events into engine with target name' do
+      listener = Norikra::Listener::SetOperation.new('target1', 'name', 'SET_OPERATION(n1,new_target)')
+      listener.engine = dummy_engine = Norikra::ListenerSpecHelper::DummyEngine.new
+
+      listener.process_sync([], [{"n1" => 8, "s" => "eight"}])
+
+      expect_result = [
+          {"item" => 8, "operation" => "difference_old_new"},
+          {"item" => 8, "operation" => "union"}
+      ]
+
+      expect(dummy_engine.events['new_target'].size).to eql(2)
+      expect(dummy_engine.events['new_target']).to match_array(expect_result)
     end
   end
 end

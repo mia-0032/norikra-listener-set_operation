@@ -15,6 +15,7 @@ module Norikra
         super
         conf = Norikra::Listener.parse query_group
         @field_name, @new_target = conf[:argument].split(',')
+
         if @field_name.nil? || @field_name.empty?
           raise Norikra::ClientError, "#{self.label} field name not specified"
         end
@@ -27,16 +28,23 @@ module Norikra
         events.map {|e| e[@field_name] }
       end
 
+      def modify_operation_events(items, operation)
+        items.map do |item|
+          {"item" => item, "operation" => operation}
+        end
+      end
+
       def process_sync(news, olds)
         new_items = extract_specify_field news
         old_items = extract_specify_field olds
 
-        result = {}
-        result["difference_new_old"] = new_items - old_items
-        result["difference_old_new"] = old_items - new_items
-        result["union"] = new_items | old_items
-        result["intersection"] = new_items & old_items
-        @engine.send(@new_target,[result])
+        result = []
+        result.concat(modify_operation_events(new_items - old_items, 'difference_new_old'))
+        result.concat(modify_operation_events(old_items - new_items, 'difference_old_new'))
+        result.concat(modify_operation_events(new_items | old_items, 'union'))
+        result.concat(modify_operation_events(new_items & old_items, 'intersection'))
+
+        @engine.send @new_target, result
       end
     end
   end
