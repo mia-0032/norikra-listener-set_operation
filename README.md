@@ -1,5 +1,7 @@
 # Norikra::Listener::SetOperation
 
+[![Build Status](https://travis-ci.org/mia-0032/norikra-listener-set_operation.svg?branch=master)](https://travis-ci.org/mia-0032/norikra-listener-set_operation)
+
 This Norikra listener plugin execute set operation between `new events` and `old events`.
 
 `new events` are events in current window, and `old events` are in previous window.
@@ -28,9 +30,8 @@ Or install it yourself as:
 You register query like below.
 
 ```sql
-SELECT
-  hostname
-FROM ping_message:win.time(1 hour)
+SELECT DISTINCT hostname
+FROM ping_message.win:time(2 min)
 ```
 
 This query sends events in current window like below.
